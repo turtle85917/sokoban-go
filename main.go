@@ -81,9 +81,53 @@ func main() {
 
 	for !gameover {
 		fmt.Println(getBoard(board, color, player, playerPos))
-		fmt.Println("> 이동할려면 a,s,d,w 중 입력해주세요 : ")
+		fmt.Printf("> 이동할려면 a,s,d,w 중 입력해주세요 : ")
 
-		value, _ := fmt.Scanln()
-		fmt.Println(value)
+		var input string
+		fmt.Scanln(&input)
+
+		if input == "a" {
+			playerPos["x"] -= 1
+		}
+		if input == "d" {
+			playerPos["x"] += 1
+		}
+		if input == "w" {
+			playerPos["y"] -= 1
+		}
+		if input == "s" {
+			playerPos["y"] += 1
+		}
+
+		if board[playerPos["y"]][playerPos["x"]] == 1 {
+			if input == "a" {
+				playerPos["x"] -= 1
+			}
+			if input == "d" {
+				playerPos["x"] += 1
+			}
+			if input == "w" {
+				playerPos["y"] -= 1
+			}
+			if input == "s" {
+				playerPos["y"] += 1
+			}
+		}
+
+		if playerPos["x"] < 0 {
+			playerPos["x"] = 0
+		}
+		if playerPos["x"] > 7 {
+			playerPos["x"] = 7
+		}
+		if playerPos["y"] < 0 {
+			playerPos["y"] = 0
+		}
+		if playerPos["y"] > 4 {
+			playerPos["y"] = 4
+		}
+
+		fmt.Println(input)
+		fmt.Println("-----------------------------")
 	}
 }
