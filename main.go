@@ -41,15 +41,7 @@ func getBlock(tile int, color int) string {
 	return result
 }
 
-func main() {
-	board := [5][8]int{
-		{0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0},
-	}
-	color := rand.Intn(6)
+func getBoard(board [5][8]int, color int, player string, playerPos map[string]int) string {
 	content := ""
 
 	for y := -1; y < 6; y++ {
@@ -57,6 +49,8 @@ func main() {
 			if x == -1 || y == -1 || x == 8 || y == 5 {
 				// 테두리
 				content += getColor(color)
+			} else if x == playerPos["x"] && y == playerPos["y"] {
+				content += player
 			} else {
 				// 안
 				content += getBlock(board[y][x], color)
@@ -65,5 +59,31 @@ func main() {
 		content += "\n"
 	}
 
-	fmt.Println(content)
+	return content
+}
+
+func main() {
+	board := [5][8]int{
+		{0, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0},
+	}
+	color := rand.Intn(7)
+
+	gameover := false
+
+	player := "😀"
+	playerPos := map[string]int{
+		"x": rand.Intn(8), "y": rand.Intn(5),
+	}
+
+	for !gameover {
+		fmt.Println(getBoard(board, color, player, playerPos))
+		fmt.Println("> 이동할려면 a,s,d,w 중 입력해주세요 : ")
+
+		value, _ := fmt.Scanln()
+		fmt.Println(value)
+	}
 }
