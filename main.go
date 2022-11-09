@@ -18,8 +18,8 @@ type Goal struct {
 }
 
 const (
-	WIDTH  = 8
-	HEIGHT = 5
+	WIDTH  = 10
+	HEIGHT = 8
 )
 
 func (bx *Box) move(x, y int) {
@@ -128,9 +128,15 @@ func main() {
 
 	box = append(box, Box{goal: false, x: 1, y: 3})
 	box = append(box, Box{goal: false, x: 3, y: 2})
+	box = append(box, Box{goal: false, x: 7, y: 4})
+	box = append(box, Box{goal: false, x: 4, y: 3})
+	box = append(box, Box{goal: false, x: 3, y: 1})
 
 	goal = append(goal, Goal{x: 2, y: 4})
 	goal = append(goal, Goal{x: 1, y: 2})
+	goal = append(goal, Goal{x: 9, y: 4})
+	goal = append(goal, Goal{x: 1, y: 3})
+	goal = append(goal, Goal{x: 2, y: 7})
 
 	rand.Seed(time.Now().UnixNano())
 	color := rand.Intn(7)
@@ -177,9 +183,9 @@ func main() {
 					box[idx].x = 0
 				}
 
-				if box[idx].x > 7 {
+				if box[idx].x > WIDTH-1 {
 					playerPos["x"] += directionX
-					box[idx].x = 7
+					box[idx].x = WIDTH - 1
 				}
 
 				if box[idx].y < 0 {
@@ -187,9 +193,9 @@ func main() {
 					box[idx].y = 0
 				}
 
-				if box[idx].y > 4 {
+				if box[idx].y > HEIGHT-1 {
 					playerPos["y"] -= directionY
-					box[idx].y = 4
+					box[idx].y = HEIGHT - 1
 				}
 			}
 		}
@@ -197,14 +203,14 @@ func main() {
 		if playerPos["x"] < 0 {
 			playerPos["x"] = 0
 		}
-		if playerPos["x"] > 7 {
-			playerPos["x"] = 7
+		if playerPos["x"] > WIDTH-1 {
+			playerPos["x"] = WIDTH - 1
 		}
 		if playerPos["y"] < 0 {
 			playerPos["y"] = 0
 		}
-		if playerPos["y"] > 4 {
-			playerPos["y"] = 4
+		if playerPos["y"] > HEIGHT-1 {
+			playerPos["y"] = HEIGHT - 1
 		}
 
 		fmt.Println("-----------------------------")
