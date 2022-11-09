@@ -5,6 +5,17 @@ import (
 	"math/rand"
 )
 
+type Box struct {
+	Goal bool
+	X    int
+	Y    int
+}
+
+func (bx *Box) move(x int, y int) {
+	bx.X += x
+	bx.Y += y
+}
+
 func getColor(color int) string {
 	switch color {
 	case 0:
@@ -26,22 +37,7 @@ func getColor(color int) string {
 	return ""
 }
 
-func getBlock(tile int, color int) string {
-	result := "⬛"
-
-	switch tile {
-	case 0:
-		result = "⬛"
-		break
-	case 1:
-		result = getColor(color)
-		break
-	}
-
-	return result
-}
-
-func getBoard(board [5][8]int, color int, player string, playerPos map[string]int) string {
+func getBoard(board [5][8]int, box []Box, color int, player string, playerPos map[string]int) string {
 	content := ""
 
 	for y := -1; y < 6; y++ {
@@ -50,10 +46,22 @@ func getBoard(board [5][8]int, color int, player string, playerPos map[string]in
 				// 테두리
 				content += getColor(color)
 			} else if x == playerPos["x"] && y == playerPos["y"] {
+				// 플레이어
 				content += player
 			} else {
-				// 안
-				content += getBlock(board[y][x], color)
+				for _, bx := range box {
+					if x == bx.X && y == bx.Y {
+						// 블럭
+						if bx.Goal {
+							content += "✅"
+						} else {
+							content += getColor(color)
+						}
+					} else {
+						// 안
+						content += "⬛"
+					}
+				}
 			}
 		}
 		content += "\n"
@@ -70,6 +78,10 @@ func main() {
 		{0, 0, 0, 0, 0, 0, 0, 0},
 		{0, 0, 0, 0, 0, 0, 0, 0},
 	}
+	var box []Box
+
+	box = append(box, Box{Goal: false, X: 4, Y: 3})
+
 	color := rand.Intn(7)
 
 	gameover := false
@@ -80,37 +92,54 @@ func main() {
 	}
 
 	for !gameover {
-		fmt.Println(getBoard(board, color, player, playerPos))
+		fmt.Println(getBoard(board, box, color, player, playerPos))
 		fmt.Printf("> 이동할려면 a,s,d,w 중 입력해주세요 : ")
 
 		var input string
 		fmt.Scanln(&input)
 
+		var directionX int
+		var directionY int
+
 		if input == "a" {
-			playerPos["x"] -= 1
+			directionX = -1
 		}
 		if input == "d" {
-			playerPos["x"] += 1
+			directionX = 1
 		}
 		if input == "w" {
-			playerPos["y"] -= 1
+			directionY = -1
 		}
 		if input == "s" {
-			playerPos["y"] += 1
+			directionY = 1
 		}
 
-		if board[playerPos["y"]][playerPos["x"]] == 1 {
-			if input == "a" {
-				playerPos["x"] -= 1
-			}
-			if input == "d" {
-				playerPos["x"] += 1
-			}
-			if input == "w" {
-				playerPos["y"] -= 1
-			}
-			if input == "s" {
-				playerPos["y"] += 1
+		playerPos["x"] += directionX
+		playerPos["y"] += directionY
+
+		for idx := 0; idx < len(box); idx++ {
+			if box[idx].X == playerPos["x"] && box[idx].Y == playerPos["y"] {
+				box[idx].move(directionX, directionY)
+
+				if box[idx].X < 0 {
+					playerPos["x"] -= directionX
+					box[idx].X = 0
+				}
+
+				if box[idx].X > 7 {
+					playerPos["x"] += directionX
+					box[idx].X = 7
+				}
+
+				if box[idx].Y < 0 {
+					playerPos["y"] -= directionY
+					box[idx].Y = 0
+				}
+
+				if box[idx].Y > 4 {
+					playerPos["y"] -= directionY
+					box[idx].Y = 4
+				}
 			}
 		}
 
