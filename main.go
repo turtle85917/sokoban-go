@@ -7,15 +7,38 @@ import (
 )
 
 type Box struct {
-	goalX int
-	goalY int
-	x     int
-	y     int
+	goal bool
+	x    int
+	y    int
 }
 
-func (bx *Box) move(x int, y int) {
+type Goal struct {
+	x int
+	y int
+}
+
+func (bx *Box) move(x, y int) {
 	bx.x += x
 	bx.y += y
+}
+
+func (bx *Box) setGoal(goal bool) {
+	bx.goal = goal
+}
+
+func getBlock(tile int, color int) string {
+	switch tile {
+	case 0:
+		return "⬛"
+	case 1:
+		return getColor(color)
+	case 2:
+		return "❌"
+	case 3:
+		return "✅"
+	}
+
+	return "⬛"
 }
 
 func getColor(color int) string {
@@ -39,8 +62,20 @@ func getColor(color int) string {
 	return ""
 }
 
-func getBoard(board [5][8]int, box []Box, color int, player string, playerPos map[string]int) string {
+func getBoard(board [5][8]int, box []Box, goal []Goal, color int, player string, playerPos map[string]int) string {
 	content := ""
+
+	for _, ga := range goal {
+		board[ga.y][ga.x] = 2
+	}
+
+	for _, bx := range box {
+		if bx.goal {
+			board[bx.y][bx.x] = 3
+		} else {
+			board[bx.y][bx.x] = 1
+		}
+	}
 
 	for y := -1; y < 6; y++ {
 		for x := -1; x < 9; x++ {
@@ -51,21 +86,7 @@ func getBoard(board [5][8]int, box []Box, color int, player string, playerPos ma
 				// 플레이어
 				content += player
 			} else {
-				for _, bx := range box {
-					if x == bx.x && y == bx.y {
-						// 블럭
-						if bx.goalX == bx.x && bx.goalY == bx.y {
-							content += "✅"
-						} else {
-							content += getColor(color)
-						}
-					} else if x == bx.goalX && y == bx.goalY {
-						content += "❌"
-					} else {
-						// 안
-						content += "⬛"
-					}
-				}
+				content += getBlock(board[y][x], color)
 			}
 		}
 		content += "\n"
@@ -74,11 +95,14 @@ func getBoard(board [5][8]int, box []Box, color int, player string, playerPos ma
 	return content
 }
 
-func checkWin(box []Box) bool {
+func checkWin(box []Box, goal []Goal) bool {
 	var stack int
-	for _, bx := range box {
-		if bx.x == bx.goalX && bx.y == bx.goalY {
-			stack++
+	for idx := 0; idx < len(box); idx++ {
+		for _, ga := range goal {
+			if ga.x == box[idx].x && ga.y == box[idx].y {
+				stack++
+				box[idx].setGoal(true)
+			}
 		}
 	}
 
@@ -93,10 +117,15 @@ func main() {
 		{0, 0, 0, 0, 0, 0, 0, 0},
 		{0, 0, 0, 0, 0, 0, 0, 0},
 	}
-	var box []Box
 
-	box = append(box, Box{goalX: 2, goalY: 4, x: 1, y: 3})
-	// box = append(box, Box{goalX: 1, goalY: 2, x: 3, y: 2})
+	var box []Box
+	var goal []Goal
+
+	box = append(box, Box{goal: false, x: 1, y: 3})
+	box = append(box, Box{goal: false, x: 3, y: 2})
+
+	goal = append(goal, Goal{x: 2, y: 4})
+	goal = append(goal, Goal{x: 1, y: 2})
 
 	rand.Seed(time.Now().UnixNano())
 	color := rand.Intn(7)
@@ -109,7 +138,7 @@ func main() {
 	}
 
 	for !gameover {
-		fmt.Println(getBoard(board, box, color, player, playerPos))
+		fmt.Println(getBoard(board, box, goal, color, player, playerPos))
 		fmt.Printf("> 이동할려면 a,s,d,w 중 입력해주세요 : ")
 
 		var input string
@@ -174,9 +203,9 @@ func main() {
 		}
 
 		fmt.Println("-----------------------------")
-		gameover = checkWin(box)
+		gameover = checkWin(box, goal)
 	}
 
-	fmt.Println(getBoard(board, box, color, player, playerPos))
+	fmt.Println(getBoard(board, box, goal, color, player, playerPos))
 	fmt.Println("You win!")
 }
