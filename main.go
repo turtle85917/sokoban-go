@@ -17,6 +17,11 @@ type Goal struct {
 	y int
 }
 
+const (
+	WIDTH  = 8
+	HEIGHT = 5
+)
+
 func (bx *Box) move(x, y int) {
 	bx.x += x
 	bx.y += y
@@ -62,7 +67,7 @@ func getColor(color int) string {
 	return ""
 }
 
-func getBoard(board [5][8]int, box []Box, goal []Goal, color int, player string, playerPos map[string]int) string {
+func getBoard(board [HEIGHT][WIDTH]int, box []Box, goal []Goal, color int, player string, playerPos map[string]int) string {
 	content := ""
 
 	for _, ga := range goal {
@@ -77,9 +82,9 @@ func getBoard(board [5][8]int, box []Box, goal []Goal, color int, player string,
 		}
 	}
 
-	for y := -1; y < 6; y++ {
-		for x := -1; x < 9; x++ {
-			if x == -1 || y == -1 || x == 8 || y == 5 {
+	for y := -1; y < HEIGHT+1; y++ {
+		for x := -1; x < WIDTH+1; x++ {
+			if x == -1 || y == -1 || x == WIDTH || y == HEIGHT {
 				// 테두리
 				content += getColor(color)
 			} else if x == playerPos["x"] && y == playerPos["y"] {
@@ -110,7 +115,7 @@ func checkWin(box []Box, goal []Goal) bool {
 }
 
 func main() {
-	board := [5][8]int{
+	board := [HEIGHT][WIDTH]int{
 		{0, 0, 0, 0, 0, 0, 0, 0},
 		{0, 0, 0, 0, 0, 0, 0, 0},
 		{0, 0, 0, 0, 0, 0, 0, 0},
