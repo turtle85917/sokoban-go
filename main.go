@@ -3,17 +3,19 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"time"
 )
 
 type Box struct {
-	Goal bool
-	X    int
-	Y    int
+	goalX int
+	goalY int
+	x     int
+	y     int
 }
 
 func (bx *Box) move(x int, y int) {
-	bx.X += x
-	bx.Y += y
+	bx.x += x
+	bx.y += y
 }
 
 func getColor(color int) string {
@@ -50,13 +52,15 @@ func getBoard(board [5][8]int, box []Box, color int, player string, playerPos ma
 				content += player
 			} else {
 				for _, bx := range box {
-					if x == bx.X && y == bx.Y {
+					if x == bx.x && y == bx.y {
 						// 블럭
-						if bx.Goal {
+						if bx.goalX == bx.x && bx.goalY == bx.y {
 							content += "✅"
 						} else {
 							content += getColor(color)
 						}
+					} else if x == bx.goalX && y == bx.goalY {
+						content += "❌"
 					} else {
 						// 안
 						content += "⬛"
@@ -70,6 +74,17 @@ func getBoard(board [5][8]int, box []Box, color int, player string, playerPos ma
 	return content
 }
 
+func checkWin(box []Box) bool {
+	var stack int
+	for _, bx := range box {
+		if bx.x == bx.goalX && bx.y == bx.goalY {
+			stack++
+		}
+	}
+
+	return len(box) == stack
+}
+
 func main() {
 	board := [5][8]int{
 		{0, 0, 0, 0, 0, 0, 0, 0},
@@ -80,15 +95,17 @@ func main() {
 	}
 	var box []Box
 
-	box = append(box, Box{Goal: false, X: 4, Y: 3})
+	box = append(box, Box{goalX: 2, goalY: 4, x: 1, y: 3})
+	// box = append(box, Box{goalX: 1, goalY: 2, x: 3, y: 2})
 
+	rand.Seed(time.Now().UnixNano())
 	color := rand.Intn(7)
 
 	gameover := false
 
 	player := "😀"
 	playerPos := map[string]int{
-		"x": rand.Intn(8), "y": rand.Intn(5),
+		"x": 2, "y": 3,
 	}
 
 	for !gameover {
@@ -118,27 +135,27 @@ func main() {
 		playerPos["y"] += directionY
 
 		for idx := 0; idx < len(box); idx++ {
-			if box[idx].X == playerPos["x"] && box[idx].Y == playerPos["y"] {
+			if box[idx].x == playerPos["x"] && box[idx].y == playerPos["y"] {
 				box[idx].move(directionX, directionY)
 
-				if box[idx].X < 0 {
+				if box[idx].x < 0 {
 					playerPos["x"] -= directionX
-					box[idx].X = 0
+					box[idx].x = 0
 				}
 
-				if box[idx].X > 7 {
+				if box[idx].x > 7 {
 					playerPos["x"] += directionX
-					box[idx].X = 7
+					box[idx].x = 7
 				}
 
-				if box[idx].Y < 0 {
+				if box[idx].y < 0 {
 					playerPos["y"] -= directionY
-					box[idx].Y = 0
+					box[idx].y = 0
 				}
 
-				if box[idx].Y > 4 {
+				if box[idx].y > 4 {
 					playerPos["y"] -= directionY
-					box[idx].Y = 4
+					box[idx].y = 4
 				}
 			}
 		}
@@ -156,7 +173,10 @@ func main() {
 			playerPos["y"] = 4
 		}
 
-		fmt.Println(input)
 		fmt.Println("-----------------------------")
+		gameover = checkWin(box)
 	}
+
+	fmt.Println(getBoard(board, box, color, player, playerPos))
+	fmt.Println("You win!")
 }
