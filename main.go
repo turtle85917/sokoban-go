@@ -114,6 +114,16 @@ func checkWin(box []Box, goal []Goal) bool {
 	return len(box) == stack
 }
 
+func BoxFilter(vs []Box, f func(Box) bool) []Box {
+	vsf := make([]Box, 0)
+	for _, v := range vs {
+		if f(v) {
+			vsf = append(vsf, v)
+		}
+	}
+	return vsf
+}
+
 func main() {
 	board := [HEIGHT][WIDTH]int{
 		{0, 0, 0, 0, 0, 0, 0, 0},
@@ -135,7 +145,7 @@ func main() {
 	goal = append(goal, Goal{x: 2, y: 4})
 	goal = append(goal, Goal{x: 1, y: 2})
 	goal = append(goal, Goal{x: 9, y: 4})
-	goal = append(goal, Goal{x: 1, y: 3})
+	goal = append(goal, Goal{x: 7, y: 3})
 	goal = append(goal, Goal{x: 2, y: 7})
 
 	rand.Seed(time.Now().UnixNano())
@@ -175,7 +185,11 @@ func main() {
 		playerPos["y"] += directionY
 
 		for idx := 0; idx < len(box); idx++ {
-			if box[idx].x == playerPos["x"] && box[idx].y == playerPos["y"] {
+			newbox := BoxFilter(box, func(b Box) bool {
+				return b.x == box[idx].x+directionX && b.y == box[idx].y+directionY
+			})
+
+			if box[idx].x == playerPos["x"] && box[idx].y == playerPos["y"] && len(newbox) == 0 {
 				box[idx].move(directionX, directionY)
 
 				if box[idx].x < 0 {
@@ -198,6 +212,14 @@ func main() {
 					box[idx].y = HEIGHT - 1
 				}
 			}
+		}
+
+		colidbox := BoxFilter(box, func(b Box) bool {
+			return b.x == playerPos["x"] && b.y == playerPos["y"]
+		})
+		if len(colidbox) != 0 {
+			playerPos["x"] -= directionX
+			playerPos["y"] -= directionY
 		}
 
 		if playerPos["x"] < 0 {
