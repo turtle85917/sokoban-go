@@ -17,9 +17,17 @@ type Goal struct {
 	y int
 }
 
+type Step struct {
+	_type string
+	idx   int
+	x     int
+	y     int
+	goal  bool
+}
+
 const (
-	WIDTH  = 10
-	HEIGHT = 8
+	WIDTH  = 15
+	HEIGHT = 12
 )
 
 func (bx *Box) move(x, y int) {
@@ -100,18 +108,29 @@ func getBoard(board [HEIGHT][WIDTH]int, box []Box, goal []Goal, color int, playe
 	return content
 }
 
-func checkWin(box []Box, goal []Goal) bool {
+func checkWin(box []Box, goal []Goal, steps *[]Step) bool {
 	var stack int
 	for idx := 0; idx < len(box); idx++ {
 		for _, ga := range goal {
 			if ga.x == box[idx].x && ga.y == box[idx].y {
 				stack++
 				box[idx].setGoal(true)
+				*steps = append(*steps, Step{_type: "box-goal", idx: idx, goal: box[idx].goal})
 			}
 		}
 	}
 
-	return len(box) == stack
+	return len(goal) == stack
+}
+
+func cancelGoal(box []Box, goal []Goal) {
+	for idx := 0; idx < len(box); idx++ {
+		for _, ga := range goal {
+			if box[idx].goal && !(ga.x == box[idx].x && ga.y == box[idx].y) {
+				box[idx].setGoal(false)
+			}
+		}
+	}
 }
 
 func BoxFilter(vs []Box, f func(Box) bool) []Box {
@@ -136,17 +155,38 @@ func main() {
 	var box []Box
 	var goal []Goal
 
+	var steps [][]Step
+	var tempStep []Step
+
 	box = append(box, Box{goal: false, x: 1, y: 3})
 	box = append(box, Box{goal: false, x: 3, y: 2})
 	box = append(box, Box{goal: false, x: 7, y: 4})
 	box = append(box, Box{goal: false, x: 4, y: 3})
 	box = append(box, Box{goal: false, x: 3, y: 1})
+	box = append(box, Box{goal: false, x: 9, y: 5})
+	box = append(box, Box{goal: false, x: 12, y: 10})
+	box = append(box, Box{goal: false, x: 3, y: 11})
+	box = append(box, Box{goal: false, x: 14, y: 4})
+	box = append(box, Box{goal: false, x: 3, y: 3})
+	box = append(box, Box{goal: false, x: 1, y: 10})
+	box = append(box, Box{goal: false, x: 10, y: 2})
+	box = append(box, Box{goal: false, x: 10, y: 6})
+	box = append(box, Box{goal: false, x: 7, y: 10})
 
 	goal = append(goal, Goal{x: 2, y: 4})
 	goal = append(goal, Goal{x: 1, y: 2})
 	goal = append(goal, Goal{x: 9, y: 4})
 	goal = append(goal, Goal{x: 7, y: 3})
 	goal = append(goal, Goal{x: 2, y: 7})
+	goal = append(goal, Goal{x: 1, y: 5})
+	goal = append(goal, Goal{x: 14, y: 2})
+	goal = append(goal, Goal{x: 4, y: 11})
+	goal = append(goal, Goal{x: 2, y: 9})
+	goal = append(goal, Goal{x: 5, y: 3})
+	goal = append(goal, Goal{x: 14, y: 1})
+	goal = append(goal, Goal{x: 10, y: 3})
+	goal = append(goal, Goal{x: 10, y: 11})
+	goal = append(goal, Goal{x: 14, y: 11})
 
 	rand.Seed(time.Now().UnixNano())
 	color := rand.Intn(7)
@@ -160,7 +200,7 @@ func main() {
 
 	for !gameover {
 		fmt.Println(getBoard(board, box, goal, color, player, playerPos))
-		fmt.Printf("> 이동할려면 a,s,d,w 중 입력해주세요 : ")
+		fmt.Printf("> 이동할려면 a, s, d, w, undo, reset 중 입력해주세요 : ")
 
 		var input string
 		fmt.Scanln(&input)
@@ -181,6 +221,29 @@ func main() {
 			directionY = 1
 		}
 
+		if input != "undo" && input != "u" {
+			tempStep = append(tempStep, Step{_type: "player-move", x: playerPos["x"], y: playerPos["y"]})
+		}
+
+		if (input == "undo" || input == "u") && len(steps) > 0 {
+			step := steps[len(steps)-1]
+
+			for _, st := range step {
+				switch st._type {
+				case "player-move":
+					playerPos["x"] = st.x
+					playerPos["y"] = st.y
+				case "box-move":
+					box[st.idx].x = st.x
+					box[st.idx].y = st.y
+				case "box-goal":
+					box[st.idx].goal = !st.goal
+				}
+			}
+
+			steps = steps[:len(steps)-1]
+		}
+
 		playerPos["x"] += directionX
 		playerPos["y"] += directionY
 
@@ -190,6 +253,7 @@ func main() {
 			})
 
 			if box[idx].x == playerPos["x"] && box[idx].y == playerPos["y"] && len(newbox) == 0 {
+				tempStep = append(tempStep, Step{_type: "box-move", idx: idx, x: box[idx].x, y: box[idx].y})
 				box[idx].move(directionX, directionY)
 
 				if box[idx].x < 0 {
@@ -236,7 +300,13 @@ func main() {
 		}
 
 		fmt.Println("-----------------------------")
-		gameover = checkWin(box, goal)
+		cancelGoal(box, goal)
+		gameover = checkWin(box, goal, &tempStep)
+
+		if len(tempStep) > 0 {
+			steps = append(steps, tempStep)
+		}
+		tempStep = []Step{}
 	}
 
 	fmt.Println(getBoard(board, box, goal, color, player, playerPos))
