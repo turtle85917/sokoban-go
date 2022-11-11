@@ -114,8 +114,10 @@ func checkWin(box []Box, goal []Goal, steps *[]Step) bool {
 		for _, ga := range goal {
 			if ga.x == box[idx].x && ga.y == box[idx].y {
 				stack++
+				if len(*steps) > 0 {
+					*steps = append(*steps, Step{_type: "box-goal", idx: idx, goal: box[idx].goal})
+				}
 				box[idx].setGoal(true)
-				*steps = append(*steps, Step{_type: "box-goal", idx: idx, goal: box[idx].goal})
 			}
 		}
 	}
@@ -227,6 +229,8 @@ func main() {
 
 		if (input == "undo" || input == "u") && len(steps) > 0 {
 			step := steps[len(steps)-1]
+			fmt.Println(steps)
+			fmt.Println(step)
 
 			for _, st := range step {
 				switch st._type {
@@ -237,7 +241,7 @@ func main() {
 					box[st.idx].x = st.x
 					box[st.idx].y = st.y
 				case "box-goal":
-					box[st.idx].goal = !st.goal
+					box[st.idx].setGoal(st.goal)
 				}
 			}
 
